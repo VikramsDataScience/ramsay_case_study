@@ -11,7 +11,7 @@ df = read_data(df_path = data_path / "Data_Insights_Synthetic_Dataset.xlsx",
 if not exists(case_study_path / "Ramsay_EDA_Profile_Report.html"):
     profile_report = ProfileReport(df,
                                 title="Ramsay Case Study EDA Report",
-                                tsmode=False, # Since the data is not a Time Series deactivate the 'tsmode'
+                                tsmode=False, # Since the data is not a Time Series deactivate the "tsmode"
                                 explorative=True)
 
     profile_report.to_file(case_study_path / "Ramsay_EDA_Profile_Report.html")
