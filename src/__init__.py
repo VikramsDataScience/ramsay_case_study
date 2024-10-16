@@ -17,11 +17,12 @@ charge_cols = config.charge_cols
 def read_data(df_path, 
             sheet_name: Optional[str] = None) -> pd.DataFrame:
     """Read either XLSX or CSV file.
-    _sheet_name_ arg is optional and is only required for an XLSX file."""
+    _sheet_name_ arg is optional and is only required for an XLSX file.
+    """
 
-    if '.xlsx' in df_path.suffix:
+    if ".xlsx" in df_path.suffix:
         df = pd.read_excel(df_path, sheet_name)
-    elif '.csv' in df_path.suffix:
+    elif ".csv" in df_path.suffix:
         df = pd.read_csv(df_path)
 
     return df

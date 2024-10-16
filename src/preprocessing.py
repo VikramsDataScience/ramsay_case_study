@@ -12,13 +12,8 @@ def read_impute_data(df,
                     float_cols,
                     categoricals,
                     output_path) -> pd.DataFrame:
-    """Read in Excel/CSV file, define columns for casting & interval definitions, and perform imputation
-    with Missing Forest.
-    IMPORTANT NOTE: When parsing to the _df_path_ arg, only parse from the 'Path' class in the 'pathlib'
-    library.
-    - _sheet_name_ (OPTIONAL): Only required when reading Excel files to indicate which Excel sheet to read
-    into the DataFrame.
-    """
+    """Perform dynamic imputation with Missing Forest."""
+
     missforest_imputer = MissForest()
     df_copy = df.copy()
 
@@ -60,11 +55,13 @@ def suppress_stdout():
 df = read_data(df_path = data_path / "Data_Insights_Synthetic_Dataset.xlsx",
                 sheet_name = "Data Insights - Synthetic Datas")
 
-def clean_pharmacy_charge(value):
-    # Check if the value is in string form and contains 'e+' (scientific notation)
-    if isinstance(value, str) and 'e+' in value:
-        # Split the string at 'e+' and keep the base value
-        base_value = value.split('e+')[0]
+def clean_clinical_charges(value):
+    """Clean up the erroneous values in the charge columns"""
+
+    # Check if the value is in string form and contains "e+" (scientific notation)
+    if isinstance(value, str) and "e+" in value:
+        # Split the string at "e+" and keep the base value
+        base_value = value.split("e+")[0]
         base_value = float(base_value)
     else:
         # For other values, convert to float directly
@@ -88,21 +85,21 @@ def clean_pharmacy_charge(value):
 
 # Apply the function to all the charge columns
 for col in charge_cols:
-    df[col] = df[col].astype(str).apply(clean_pharmacy_charge)
+    df[col] = df[col].astype(str).apply(clean_clinical_charges)
 
-# Impute the binary categorical cols with a new category called 'unknown'
-df = df.fillna({'UnplannedTheatreVisit': 'unknown', 
-                'Readmission28Days': 'unknown', 
-                'PalliativeCareStatus': 'unknown'})
+# Impute the binary categorical cols with a new category called "unknown"
+df = df.fillna({"UnplannedTheatreVisit": "unknown", 
+                "Readmission28Days": "unknown", 
+                "PalliativeCareStatus": "unknown"})
 
-# Convert 'AdmissionTime' and 'SeparationTime' cols to 24 hour formatted clock
-df['AdmissionTime'] = pd.to_datetime(df['AdmissionTime'], format="%H:%M:%S").dt.time
-df['SeparationTime'] = pd.to_datetime(df['SeparationTime'], format="%H:%M:%S").dt.time
+# Convert "AdmissionTime" and "SeparationTime" cols to 24 hour formatted clock
+df["AdmissionTime"] = pd.to_datetime(df["AdmissionTime"], format="%H:%M:%S").dt.time
+df["SeparationTime"] = pd.to_datetime(df["SeparationTime"], format="%H:%M:%S").dt.time
 
 # Create a new Feature: Length of Stay (LOS)
-df['AdmissionDate'] = pd.to_datetime(df['AdmissionDate'])
-df['SeparationDate'] = pd.to_datetime(df['SeparationDate'])
-df['LengthOfStay'] = (df['SeparationDate'] - df['AdmissionDate']).dt.days
+df["AdmissionDate"] = pd.to_datetime(df["AdmissionDate"])
+df["SeparationDate"] = pd.to_datetime(df["SeparationDate"])
+df["LengthOfStay"] = (df["SeparationDate"] - df["AdmissionDate"]).dt.days
 
 # Perform imputation, convert to CSV and save for downstream consumption
 df = read_impute_data(df=df,
