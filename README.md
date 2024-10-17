@@ -30,3 +30,53 @@ Referring to the ydata profiling report to help with EDA (please refer to `src.e
 - In observing the above, I ran a filter to determine how often the distribution between the `25th Percentile` was the same as the `Maximum`. Out of the total 22,857 rows 16,957 (74%) of the cases the charges don't change. So, it looks like only in 26% of the surgical cases have the costs changed between the 25th Percentile and the Maximum.
 
 ## Part 3: Strategic Insights and Recommendations
+Two possible evidence based insights:
+- For the new feature I had created on Length of Stay, I did notice that about ~77% of the episode ids in the dataset have an LOS that is $\geq$ 7 days. Depending on the Case-Mix/Per Diem agreements with the Private Health Insurers (or out-of-pocket for those patients who're paying directly), I would think that the longer LOS would present an operations problem for Ramsay? From my Healthscope experience, I've come to understand the longer an LOS, the less profitable, and higher risk it is for the hospital, since it increases the likelihood of HACs (Hospital Acquired Complications) occuring? These HACs could either be a result of postsurgical complications or falls within the hospital. On this note, the final section on model development looks at a proposal for a possible model that could optimise LOS.
+- The aforementioned DRG001, DRG002, and DRG003 were identified as the largest revenue generators in the dataset with a summed total of about $112M in revenue. From an acquisitions point of view, if this is indeed representative of Ramsay's revenue generation, it would make sense to focus on promoting Ramsay's hospitals to the VMOs (Visiting Medical Officers) either whose specialisations lie in performing those surgeries or, if its feasible, optimise some hospital Operating Theatre's such that they make performing such surgeries easier, safer for the patient, and/or more efficient? 
+<br>&nbsp;&nbsp;Also, an additional possibility (if it's applicable, of course!) could lie in the purchase of surgical robots (if Ramsay doesn't already have them) that could assist in performing those surgeries more easily? A further drawcard could also lie in sharing some of the data that the surgical robots have with some of the surgeons who're performing research in those specialisations? From my Healthscope experience, I've been told by one of the leaders that sharing some of this data can sometimes be very alluring to researching VMOs.
+
+## Part 4: Model Development
+From a Data Science perspective, I feel that the first insight (alluding to the new feature, `LengthOfStay`) is probably the most actionable in terms of developing a model:
+### Model purpose
+- To minimise the cost and risks (given the aforementioned HACs that may arise the longer a patient remains admitted) to the business associated with extended Lengths of Stay(LOS).
+### Model choice
+- To me, minimisation of Length of Stay is a good candidate for Mathematical Optimisation. This is whereby, we assume LOS is the objective function that we're trying to minimise given certain Decision Variables (that which correspond to actions or choices that we can make in our decision problem) and Constraints (that which restrict the possible values of our decision variables). 
+<br>&nbsp;&nbsp;In the spirit of transparency, I feel it's important for me to say that I haven't developed model of this nature in my professional career, as yet. But the understanding I do have is a result of the research I conducted at Healthscope, when this was discussed as a prospective project for Operations.
+### Preprocessing steps
+The same steps followed in the `src.preprocessing` module of the case study would also need to be followed for the proposed model as well:
+- Dynamic imputation of missing values using MissForest
+- Clean up the all the clinical charge columns using the `clean_clinical_charges()` function, such that the scientific notation is cleaned up, and the incredibly large values are limited to $1000 and a conversion from cents to dollars is also done. I'm not sure if my proposed `clean_clinical_charges()` function is actually correct? But, when I tested it against all the messy data in those clinical charges columns, it generated much more reasonable looking values. But, I'm happy to admit if my proposal is incorrect!
+- Impute the columns (`UnplannedTheatreVisit`, `Readmission28Days`, and `PalliativeCareStatus`) that contain binary categoricals with a third category called 'unkown' (this would change the column to a categorical variable), since we there weren't sufficient instances of either true or false to infer dynamic imputation. Since there were so few values in these columns, any dynamic imputation technique that attempted a binary method would inevitably be deeply biased/flawed. So, I opted for creating this third category.
+- Convert the `AdmissionTime` and `SeparationTime` columns to time format
+- Create the objective function, `LengthOfStay`, by taking the difference between the `AdmissionDate` and `SeparationDate` columns.
+### Evaluation metrics
+- As far as my research has informed me (again, I'm happy to be proven wrong here, as I've only researched but not developed one of these models!), there's one primary evaluation metric used in Mathematical Optimisation - <a href='https://mobook.github.io/MO-book/notebooks/02/02-lad-regression.html'>Least Absolute Deviation Regression (LAD)</a>.
+- The LAD Regression equation referenced in the above link refers to the following:
+$$min \sum_{i=1}^n |e_i|$$
+$Where:$<br>
+- $e_i = $ error term<br>
+Another way to express the above that is a little more explainable:<br>
+$$S = \sum_{i=1}^n |y_i - f(x_i)|$$
+$Where:$
+- $y_i$ and $x_i$ are points in a data set
+- $f(x_i)$ is a quadratic expression of type $f(x) = ax^2+bx+c$ where the parameters of $a,b$ and $c$ are not yet known
+- $S = $ Sum of the absolute error values<br>
+<br>&nbsp;&nbsp;So the above equations (really it's just one equation that is slightly rewritten) refer to the minimisation of the error term when given a set of data points. This technique is also used as part of the $L_1$ <a href= 'https://en.wikipedia.org/wiki/Lp_space'>sum of the absolute errors</a>.
+
+## Part 5: MLOps and Deployment
+Once the model is developed in close conjunction with stakeholders, and has received the necessary sign offs to move into production, the following steps (in no particular order) would be one way to deploy the model (I've used Azure for production deployment at Healthscope, so I might use that as a guide in terms of terminology):
+- Build the <b>ML Pipelines</b> in YAML that will connect each of the Python modules such that they run synchronously. For instance a pipeline (in synchronous order of execution may look like):
+    1. The model may need to connect to the database to run a SQL query and grab the necessary data before anything else occurs. 
+    2. Similarly there might external sources of data that have been identified whereby we may need to connect to an API and access that data. Steps 1 and 2 would run in parallel, but both must complete for step 3 to commence.
+    3. Perform any necessary data transformations or preprocessing steps.
+    4. If there are any parameter optimisation steps necessary run those after preprocessing has completed. As I understand it, in Mathematical Optimisation, parameters that determine index sets or upper/lower bounds can make up an immutable parameter space. Those could be set in this step.
+    5. Run the optimisation models for every ward that is in-scope for the model.
+    6. Connect to and run any front end applications that may need to be run, such that results of the models can be delivered to the stakeholders.
+- <b>Set schedule YAML for the pipeline</b> to execute at a given frequency that is agreed upon by stakeholders (maybe once a week/fortnight? However, often is required)
+- <b>Set up data drift</b>. This will also have an agreed upon frequency with stakeholders where it will run to determine if there's been any meaningful changes in the data distributions that can cause the model to underperform or even collapse altogether. For instance, if the model is set at the ward level, wards can temporarily shutdown or merge that can cause the measured patient activity to suddenly and unexpectedly hit 0. 
+<br>&nbsp;&nbsp;<a href='https://devblogs.microsoft.com/ise/building-a-clinical-data-drift-monitoring-system-with-azure-devops-azure-databricks-and-mlflow/'> Microsoft</a> had developed some code that was purpose built for clinical applications and shared it on a public GitHub repo that had an implementation of data drift that utilised a 2-tailed Probability Distribution by way of the K-S (Kolmogorov–Smirnov) Test. If there was a statistically significant change between the 2 distributions (i.e. if p < 0.05 set as default). In order for this test to run it requires a reference period and current period to run. The reference period would be a preagreed upon offset to the date the data drift runs. Something like:
+`from datetime import datetime, timedelta`<br>
+`now = datetime.now()`<br>
+`reference_date = timedelta(days=14)`
+<br>&nbsp;&nbsp;At Healthscope, if data drift was detected, an email with the ward ids would be sent by the Azure platform to the DS team. Upon which I would conduct an investigation as to what may have caused the data to drift. Almost all of the time, it was caused by wards temporarily shutting down or merging with a neighbouring ward.
+- <b>Set up model drift</b>. 
