@@ -16,9 +16,7 @@ def read_impute_data(df,
 
     missforest_imputer = MissForest()
     df_copy = df.copy()
-    print("Selected float columns for imputation:", float_cols)
-    print("Shape of df[float_cols]:", df[float_cols].shape)
-    print(df[float_cols])
+    
     # Perform imputation only on the specified float_cols
     with suppress_stdout():
         missforest_imputer.fit(x=df[float_cols], 
