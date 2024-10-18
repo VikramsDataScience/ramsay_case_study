@@ -23,4 +23,4 @@ ENV PYTHONPATH=/app
 
 # Copy the data directory to working directory
 RUN mkdir -p /app/data
-COPY data/ /app/data/
+COPY data/Data_Insights_Synthetic_Dataset.xlsx /app/data/Data_Insights_Synthetic_Dataset.xlsx
