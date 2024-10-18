@@ -6,3 +6,4 @@ SQLAlchemy==2.0.21
 ydata_profiling==4.8.3
 scikit-learn==1.5.2
 lightgbm==4.5.0
+openpyxl==3.1.5
