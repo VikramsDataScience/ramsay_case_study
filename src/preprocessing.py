@@ -16,10 +16,12 @@ def read_impute_data(df,
 
     missforest_imputer = MissForest()
     df_copy = df.copy()
-
+    print("Selected float columns for imputation:", float_cols)
+    print("Shape of df[float_cols]:", df[float_cols].shape)
+    print(df[float_cols].head())
     # Perform imputation only on the specified float_cols
     with suppress_stdout():
-        imputed_values = missforest_imputer.fit_transform(x=df[float_cols], 
+        imputed_values = missforest_imputer.fit_transform(x=df[float_cols],
                                                             categorical=categoricals)
     
     # Create a DataFrame from the imputed values and ensure column names are preserved
