@@ -51,17 +51,25 @@ The same steps followed in the `src.preprocessing` module of the case study woul
 - Create the objective function, `LengthOfStay`, by taking the difference between the `AdmissionDate` and `SeparationDate` columns.
 ### Evaluation metrics
 - As far as my research has informed me (again, I'm happy to be proven wrong here, as I've only researched but not developed one of these models!), there's one primary evaluation metric used in Mathematical Optimisation - <a href='https://mobook.github.io/MO-book/notebooks/02/02-lad-regression.html'>Least Absolute Deviation Regression (LAD)</a>.
-- The LAD Regression equation referenced in the above link refers to the following:
-$$min \sum_{i=1}^n |e_i|$$
-$Where:$<br>
-- $e_i = $ error term<br>
+- The LAD Regression equation referenced in the above link refers to the following:<br>
+<!-- Centered equation -->
+$$
+min \sum_{i=1}^n |e_i|
+$$
+<!-- Centered equation -->
+Where:<br>
+- $e_i=$ error term<br>
 Another way to express the above that is a little more explainable:<br>
-$$S = \sum_{i=1}^n |y_i - f(x_i)|$$
-$Where:$
+<!-- Centered equation -->
+$$
+S = \sum_{i=1}^n |y_i - f(x_i)|
+$$
+<!-- Centered equation -->
+Where:<br>
 - $y_i$ and $x_i$ are points in a data set
 - $f(x_i)$ is a quadratic expression of type $f(x) = ax^2+bx+c$ where the parameters of $a,b$ and $c$ are not yet known
-- $S = $ Sum of the absolute error values<br>
-<br>&nbsp;&nbsp;So the above equations (really it's just one equation that is slightly rewritten) refer to the minimisation of the error term when given a set of data points. This technique is also used as part of the $L_1$ <a href= 'https://en.wikipedia.org/wiki/Lp_space'>sum of the absolute errors</a>.
+- $S=$ Sum of the absolute error values<br>
+So the above equations (really it's just one equation that is slightly rewritten) refer to the minimisation of the error term when given a set of data points. This technique is also used as part of the $L_1$ <a href= 'https://en.wikipedia.org/wiki/Lp_space'>sum of the absolute errors</a>.
 
 ## Part 5: MLOps and Deployment
 Once the model is developed in close conjunction with stakeholders, and has received the necessary sign offs to move into production, the following steps (in no particular order) would be one way to deploy the model (I've used Azure for production deployment at Healthscope, so I might use that as a guide in terms of terminology):
@@ -74,9 +82,15 @@ Once the model is developed in close conjunction with stakeholders, and has rece
     6. Connect to and run any front end applications that may need to be run, such that results of the models can be delivered to the stakeholders.
 - <b>Set schedule YAML for the pipeline</b> to execute at a given frequency that is agreed upon by stakeholders (maybe once a week/fortnight? However, often is required)
 - <b>Set up data drift</b>. This will also have an agreed upon frequency with stakeholders where it will run to determine if there's been any meaningful changes in the data distributions that can cause the model to underperform or even collapse altogether. For instance, if the model is set at the ward level, wards can temporarily shutdown or merge that can cause the measured patient activity to suddenly and unexpectedly hit 0. 
-<br>&nbsp;&nbsp;<a href='https://devblogs.microsoft.com/ise/building-a-clinical-data-drift-monitoring-system-with-azure-devops-azure-databricks-and-mlflow/'> Microsoft</a> had developed some code that was purpose built for clinical applications and shared it on a public GitHub repo that had an implementation of data drift that utilised a 2-tailed Probability Distribution by way of the K-S (Kolmogorov–Smirnov) Test. If there was a statistically significant change between the 2 distributions (i.e. if p < 0.05 set as default). In order for this test to run it requires a reference period and current period to run. The reference period would be a preagreed upon offset to the date the data drift runs. Something like:
+<br>&nbsp;&nbsp;<a href='https://devblogs.microsoft.com/ise/building-a-clinical-data-drift-monitoring-system-with-azure-devops-azure-databricks-and-mlflow/'> Microsoft</a> had developed some code that was purpose built for clinical applications and shared it on a public GitHub repo that had an implementation of data drift that utilised a 2-tailed Probability Distribution by way of the K-S (Kolmogorov–Smirnov) Test. If there was a statistically significant change between the 2 distributions (i.e. if p < 0.05 set as default). In order for this test to run it requires a reference period and current period to run. The reference period would be a preagreed upon offset to the date the data drift runs. Something like:<br>
 `from datetime import datetime, timedelta`<br>
 `now = datetime.now()`<br>
 `reference_date = timedelta(days=14)`
 <br>&nbsp;&nbsp;At Healthscope, if data drift was detected, an email with the ward ids would be sent by the Azure platform to the DS team. Upon which I would conduct an investigation as to what may have caused the data to drift. Almost all of the time, it was caused by wards temporarily shutting down or merging with a neighbouring ward.
-- <b>Set up model drift</b>. 
+- <b>Set up model drift</b>. Unlike data drift, which is empirically driven, model drift is sadly a much more nuanced and difficult thing to implement in a robust manner. Primarily because many of the causes of model drift may not be directly measurable until they occur, or we're not aware of the particulars of a model drift until after the fact!
+<br>&nbsp;&nbsp;In saying the above, the following is a list of model drift types:
+    - <b>Label drift</b>: This is a change when there's a change in the class label, or predictor (Y), itself. For example when I was referring to Healthscope's wards temporarily, but suddenly shutting down or merging, this would an example of Label drift, since it directly effects the predictor (Y).
+    - <b>Feature drift</b>: When some (or all) of the features (X) that enrich the predictor (Y) change in some significant way. For example, the 2nd model I had developed for Healthscope was a short window (3 day) forecast of ED Presentations. In that model there were 5 features - from memory, I think they were transfer_reason, type, arrival, triage_category, and value. Please don't quote me on the exact list, but I think these were the additional features I used to increase the accuracy of the forecasts!
+    <br>&nbsp;&nbsp;So in the case of the ED forecast model, if any or all of those features altered in some statistically significant way, it would account for feature drift, and will then become a driver in potentially decreasing the accuracy of the predictions (Y).
+    - <b>Concept drift</b>: This refers to any latent, or unmeasured, variable that can strongly influence the predictor (Y). In the Healthscope ED model case as an example, if there's a nearby disaster, major traffic accident or anything of that like, it would directly influence the number of Presentations to any of the Healthscope's nearby EDs. However, that data is not part of my forecast model! As such, any such incidents of that nature would likely cause my model 'shock', and the accuracy would probably collapse.
+<br><br>&nbsp;&nbsp;Depending on which literature you're reviewing, you'll tend to see differences in the above list. But from my research, professional experience, and understanding of model drift, the above list tends to be a reasonable coverage of the topic. But, as mentioned, capturing model drift is especially insidious in MLOps world. From my Healthscope experience, my approach to addressing model drift was to write and present to the Program Manager and Program Director a 12-page document that detailed all of the risks that were associated with deploying the patient activity forecast models into production. Those risks were an enumeration of the above topics around model drift!
