@@ -1,5 +1,10 @@
 FROM python:3.11-slim
 
+# Install the required system packages
+RUN apt-get update && apt-get install -y \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
 # Set working directory
 WORKDIR /app
 
