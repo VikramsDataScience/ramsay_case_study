@@ -31,7 +31,6 @@ def read_impute_data(df,
     
     # Verify if there are any NaNs and verify dtypes in the DF
     print("NaN values:\n", df_copy.isna().sum())
-    print("Data types:\n", df_copy.dtypes)
     
     # Save the entire DataFrame, including imputed and non-imputed columns, to CSV
     df_copy.to_csv(output_path, index=False)  

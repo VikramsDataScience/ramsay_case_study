@@ -9,6 +9,10 @@ libgomp1 \
 # Set working directory
 WORKDIR /app
 
+# Create and activate virtual environment
+RUN python -m venv /opt/venv
+ENV PATH="/opt/venv/bin:$PATH"
+
 # Copy requirements.txt to working directory
 COPY requirements.txt .
 
@@ -17,10 +21,10 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir pandas
 
 # Copy application files to the container
-COPY . . 
+COPY . .    
 
 # Set python path to the /app root folder
-ENV PYTHONPATH=/app
+ENV PYTHONPATH=/app:/app/src
 
 # Copy the data directory to working directory
 RUN mkdir -p /app/data
@@ -29,3 +33,6 @@ COPY data/ /app/data/
 # Debugging: List files in the /app and /app/data directory
 RUN echo "Listing files in /app:" && ls -la /app
 RUN echo "Listing files in /app/data:" && ls -la /app/data
+
+# Set the entrypoint to use the virtual environment
+ENTRYPOINT ["/opt/venv/bin/python"]
