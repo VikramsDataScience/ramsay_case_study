@@ -19,3 +19,7 @@ COPY . .
 
 # Set python path to the /app root folder
 ENV PYTHONPATH=/app
+
+# Create the data directory and copy it to working directory
+RUN mkdir -p /app/data
+COPY data/ /app/data/
