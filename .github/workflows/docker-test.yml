@@ -3,7 +3,7 @@ name: Test Docker Container
 on:
     push:
         branches:
-            - main
+            - '**'
 
 jobs:
     build:
