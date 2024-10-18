@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.11.5-slim
 
 # Install the required system packages
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,4 +23,8 @@ ENV PYTHONPATH=/app
 
 # Copy the data directory to working directory
 RUN mkdir -p /app/data
-COPY data/Data_Insights_Synthetic_Dataset.xlsx /app/data/Data_Insights_Synthetic_Dataset.xlsx
+COPY data/ /app/data/
+
+# Debugging: List files in the /app and /app/data directory
+RUN echo "Listing files in /app:" && ls -la /app
+RUN echo "Listing files in /app/data:" && ls -la /app/data
