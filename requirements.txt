@@ -2,6 +2,5 @@ MissForest==2.5.5
 numpy==1.24.3
 pandas==2.0.3
 plotly==5.9.0
-SQLAlchemy==1.4.39
 SQLAlchemy==2.0.21
 ydata_profiling==4.8.3
