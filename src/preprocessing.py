@@ -21,9 +21,9 @@ def read_impute_data(df,
     print(df[float_cols])
     # Perform imputation only on the specified float_cols
     with suppress_stdout():
-        missforest_imputer.fit(df[float_cols], 
+        missforest_imputer.fit(x=df[float_cols], 
                                 categorical=categoricals)
-        imputed_values = missforest_imputer.transform(x=df[float_cols]),
+        imputed_values = missforest_imputer.transform(x=df[float_cols])
                                                             #categorical=categoricals)
     
     # Create a DataFrame from the imputed values and ensure column names are preserved
