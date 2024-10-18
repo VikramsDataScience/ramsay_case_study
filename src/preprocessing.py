@@ -19,8 +19,9 @@ def read_impute_data(df,
 
     # Perform imputation only on the specified float_cols
     with suppress_stdout():
-        imputed_values = missforest_imputer.fit_transform(x=df[float_cols], 
-                                                            categorical=categoricals)
+        missforest_imputer.fit(x=df[float_cols], 
+                                categorical=categoricals)
+        imputed_values = missforest_imputer.transform(x=df[float_cols])
     
     # Create a DataFrame from the imputed values and ensure column names are preserved
     imputed_df = pd.DataFrame(imputed_values, columns=float_cols, index=df.index)
@@ -30,7 +31,6 @@ def read_impute_data(df,
     
     # Verify if there are any NaNs and verify dtypes in the DF
     print("NaN values:\n", df_copy.isna().sum())
-    print("Data types:\n", df_copy.dtypes)
     
     # Save the entire DataFrame, including imputed and non-imputed columns, to CSV
     df_copy.to_csv(output_path, index=False)  
