@@ -1,7 +1,7 @@
 import plotly.express as px
 
 # Relative imports
-from . import data_path, case_study_path, read_data
+from . import data_path, output_path, read_data
 
 df = read_data(data_path / "Data_Insights_Synthetic_Dataset.csv")
 
@@ -19,4 +19,4 @@ for agg in ["sum", "max"]:
                     "AR-DRG": "DRG", 
                     "TotalCharges": "Total Charges"
                     })
-    fig.write_html(case_study_path / f"{agg}_Charges_by_DRG.html", include_plotlyjs="cdn")
+    fig.write_html(output_path / f"{agg}_Charges_by_DRG.html", include_plotlyjs="cdn")

@@ -13,6 +13,7 @@ data_path = Path(config.data_path)
 numerical_cols = config.numerical_cols
 categorical_cols = config.categorical_cols
 charge_cols = config.charge_cols
+output_path = config.output_path
 
 def read_data(df_path, 
             sheet_name: Optional[str] = None) -> pd.DataFrame:
