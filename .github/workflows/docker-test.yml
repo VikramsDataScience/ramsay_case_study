@@ -27,9 +27,9 @@ jobs:
             - name: Run Docker Container
               run: |
                 docker run ramsay_case_study python -m src.preprocessing
-                python -m src.eda_profile_report
-                python -m src.drg_analysis
-                python -m src.sql_queries
+                docker run ramsay_case_study python -m src.eda_profile_report
+                docker run ramsay_case_study python -m src.drg_analysis
+                docker run ramsay_case_study python -m src.sql_queries
       
             # Verify the container is running as expected
             - name: Verify container output
